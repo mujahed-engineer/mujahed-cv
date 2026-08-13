@@ -470,6 +470,7 @@
       <div class="hero-ctas">
         <a href="#certificates" class="btn btn-primary">اطّلع على شهاداتي</a>
         <a href="#contact" class="btn btn-ghost">تواصل معي مباشرة</a>
+        <button id="lang-toggle" onclick="toggleLanguage()" class="btn btn-ghost">English</button>
       </div>
     </div>
 
@@ -643,9 +644,50 @@
 
 <footer>
   <div class="wrap">
-    جميع الحقوق محفوظة © 2025 <strong>المهندس مجاهد هاشم مطر</strong> — Civil Engineer, Samarra University
+    جميع الحقوق محفوظة © 2026 <strong>المهندس مجاهد هاشم مطر</strong> — Civil Engineer, Samarra University
   </div>
 </footer>
 
+  <script>
+  function setLanguage(lang) {
+    const langBtn = document.getElementById('lang-toggle');
+    const elements = document.querySelectorAll('.lang-text');
+
+    if (lang === 'en') {
+      document.documentElement.dir = 'ltr';
+      document.documentElement.lang = 'en';
+      if (langBtn) langBtn.innerText = 'عربي';
+
+      elements.forEach(el => {
+        if (el.getAttribute('data-en')) {
+          el.innerText = el.getAttribute('data-en');
+        }
+      });
+    } else {
+      document.documentElement.dir = 'rtl';
+      document.documentElement.lang = 'ar';
+      if (langBtn) langBtn.innerText = 'English';
+
+      elements.forEach(el => {
+        if (el.getAttribute('data-ar')) {
+          el.innerText = el.getAttribute('data-ar');
+        }
+      });
+    }
+
+    localStorage.setItem('preferredLang', lang);
+  }
+
+  function toggleLanguage() {
+    const currentLang = localStorage.getItem('preferredLang') || 'ar';
+    const newLang = currentLang === 'ar' ? 'en' : 'ar';
+    setLanguage(newLang);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const savedLang = localStorage.getItem('preferredLang') || 'ar';
+    setLanguage(savedLang);
+  });
+</script>
 </body>
 </html>
