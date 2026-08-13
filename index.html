@@ -467,23 +467,42 @@ body {
   @media (prefers-reduced-motion: reduce){
     *{ transition: none !important; animation: none !important; }
   }
+ .btn-lang {
+  background: transparent;
+  border: 1px solid #b4863f;
+  color: #b4863f;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+.btn-lang:hover {
+  background: #b4863f;
+  color: #fff;
+} 
 </style>
 </head>
 <body>
 
 <header class="site-nav">
   <div class="nav-inner">
- 
+
     <a class="brand" href="#hero">
       <span class="mark"><span>م.م</span></span>
-      مجاهد هاشم مطر
+      <span class="lang-text" data-ar="مجاهد هاشم مطر" data-en="Mujahed Hashim Mutar">مجاهد هاشم مطر</span>
     </a>
+
     <nav class="nav-links">
-      <a href="#about">نبذة عني</a>
-      <a href="#skills">المهارات</a>
-      <a href="#certificates">الشهادات</a>
-      <a href="#contact" class="nav-cta">تواصل معي</a>
+      <a href="#about" class="lang-text" data-ar="نبذة عني" data-en="About">نبذة عني</a>
+      <a href="#skills" class="lang-text" data-ar="المهارات" data-en="Skills">المهارات</a>
+      <a href="#certificates" class="lang-text" data-ar="الشهادات" data-en="Certificates">الشهادات</a>
+      <a href="#contact" class="lang-text" data-ar="تواصل معي" data-en="Contact">تواصل معي</a>
+      <button id="lang-toggle" onclick="toggleLanguage()" class="btn-lang">English</button>
     </nav>
+
+  </div>
+</header>
   </div>
 </header>
 
@@ -506,22 +525,33 @@ body {
 <div class="hero-ctas">
   <a href="#certificates" class="btn btn-primary lang-text" data-ar="اطّلع على شهاداتي" data-en="View Certificates">اطّلع على شهاداتي</a>
   <a href="#contact" class="btn btn-ghost lang-text" data-ar="تواصل معي مباشرة" data-en="Contact Me">تواصل معي مباشرة</a>
-  <button id="lang-toggle" onclick="toggleLanguage()" class="btn btn-ghost">English</button>
-</div>
-      </div>
-    </div>
 
-    <div class="hero-card">
-      <div class="row"><span>الاسم الكامل</span><span>مجاهد هاشم مطر</span></div>
-      <div class="row"><span>Full Name</span><span>Mujahed Hashim Mutar</span></div>
-      <div class="row"><span>التخصص</span><span>هندسة مدنية</span></div>
-      <div class="row"><span>الجامعة</span><span>جامعة سامراء</span></div>
-      <div class="row"><span>المرحلة الدراسية</span><span>الرابعة (منتهية / خريج)</span></div>
-      <div class="row"><span>مجال التركيز</span><span>QA/QC · OSHA · إشراف موقع</span></div>
-      <div class="row"><span>البرمجيات</span><span>Revit · AutoCAD</span></div>
-    </div>
+<div class="hero-card">
+  <div class="row">
+    <span class="lang-text" data-ar="الاسم الكامل" data-en="Full Name">الاسم الكامل</span>
+    <span class="lang-text" data-ar="مجاهد هاشم مطر" data-en="Mujahed Hashim Mutar">مجاهد هاشم مطر</span>
   </div>
-</section>
+  <div class="row">
+    <span class="lang-text" data-ar="التخصص" data-en="Specialization">التخصص</span>
+    <span class="lang-text" data-ar="هندسة مدنية" data-en="Civil Engineering">هندسة مدنية</span>
+  </div>
+  <div class="row">
+    <span class="lang-text" data-ar="الجامعة" data-en="University">الجامعة</span>
+    <span class="lang-text" data-ar="جامعة سامراء" data-en="Samarra University">جامعة سامراء</span>
+  </div>
+  <div class="row">
+    <span class="lang-text" data-ar="المرحلة الدراسية" data-en="Academic Stage">المرحلة الدراسية</span>
+    <span class="lang-text" data-ar="الرابعة (منتهية / خريج)" data-en="Fourth Stage">الرابعة (منتهية / خريج)</span>
+  </div>
+  <div class="row">
+    <span class="lang-text" data-ar="مجال التركيز" data-en="Focus Area">مجال التركيز</span>
+    <span class="lang-text" data-ar="إشراف موقع · QA/QC · OSHA" data-en="Site Supervision · QA/QC · OSHA">إشراف موقع · QA/QC · OSHA</span>
+  </div>
+  <div class="row">
+    <span class="lang-text" data-ar="البرمجيات" data-en="Software">البرمجيات</span>
+    <span>Revit · AutoCAD</span>
+  </div>
+</div>
 
 <!-- ===================== ABOUT ===================== -->
 <section id="about">
