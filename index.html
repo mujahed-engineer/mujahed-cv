@@ -467,17 +467,17 @@
   ::selection{ background: var(--gold); color: #14100a; }
   :focus-visible{ outline: 2px solid var(--gold); outline-offset: 3px; }
 
-  /* ================= المساعد الهندسي الذكي (Chatbot) ================= */
+  /* ================= مساعد التخمين الإنشائي الذكي (AI Chatbot) ================= */
   .chat-fab{
     position: fixed; bottom: 24px; right: 24px; z-index: 150;
-    width: 62px; height: 62px; border-radius: 50%;
+    width: 64px; height: 64px; border-radius: 50%;
     background: linear-gradient(135deg, var(--gold-bright), var(--gold) 60%, var(--gold-deep));
     display:flex; align-items:center; justify-content:center;
     color:#14100a; box-shadow: 0 12px 28px -8px rgba(201,161,90,0.55);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
   .chat-fab:hover{ transform: translateY(-3px) scale(1.05); box-shadow: 0 16px 34px -6px rgba(201,161,90,0.65); }
-  .chat-fab svg{ width: 25px; height: 25px; position: relative; z-index:1; }
+  .chat-fab svg{ width: 27px; height: 27px; position: relative; z-index:1; }
   .chat-fab .fab-pulse{
     position:absolute; inset: -6px; border-radius:50%; border: 1px solid var(--gold);
     opacity: 0.55; animation: fabPulse 2.6s ease-out infinite;
@@ -490,36 +490,43 @@
   @media (prefers-reduced-motion: reduce){ .chat-fab .fab-pulse{ animation: none; } }
 
   .chat-window{
-    position: fixed; bottom: 98px; right: 24px; z-index: 151;
-    width: 380px; max-width: calc(100vw - 32px);
-    height: 540px; max-height: calc(100vh - 140px);
-    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    position: fixed; bottom: 100px; right: 24px; z-index: 151;
+    width: 408px; max-width: calc(100vw - 32px);
+    height: 600px; max-height: calc(100vh - 130px);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
     box-shadow: 0 30px 70px -14px rgba(0,0,0,0.55);
     display:flex; flex-direction:column; overflow:hidden;
     opacity: 0; transform: translateY(18px) scale(0.96); pointer-events:none;
     transition: opacity 0.3s ease, transform 0.3s ease, height 0.3s ease;
   }
   .chat-window.open{ opacity:1; transform: translateY(0) scale(1); pointer-events:auto; }
-  .chat-window.minimized{ height: 66px; }
+  .chat-window.minimized{ height: 68px; }
   .chat-window.minimized .chat-body,
   .chat-window.minimized .chat-quick-replies,
+  .chat-window.minimized .chat-attachments,
   .chat-window.minimized .chat-input,
   .chat-window.minimized .chat-disclaimer{ display:none; }
 
+  /* لمسة زجاجية أنيقة على رأس النافذة فقط (Glassmorphism موضعي ووظيفي) */
   .chat-header{
     display:flex; align-items:center; justify-content:space-between;
-    padding: 13px 16px; border-bottom: 1px solid var(--border-soft);
-    background: var(--surface-2); flex-shrink:0;
+    padding: 14px 16px; border-bottom: 1px solid var(--border-soft);
+    background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+    backdrop-filter: blur(10px) saturate(140%);
+    flex-shrink:0; position: relative; z-index: 2;
   }
   .chat-header-info{ display:flex; align-items:center; gap: 10px; }
   .chat-avatar{
-    width: 38px; height: 38px; border-radius:50%; border: 1px solid var(--gold);
+    width: 40px; height: 40px; border-radius:50%; border: 1px solid var(--gold);
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    font-family: Georgia, serif; font-size: 1.05rem; color: var(--gold);
+    background: linear-gradient(160deg, rgba(201,161,90,0.16), transparent);
+    font-family: Georgia, serif; font-size: 1.1rem; color: var(--gold);
   }
   .chat-header h4{ font-size: 0.9rem; color: var(--text); font-family: var(--font-body); font-weight:700; }
-  .chat-status{ display:flex; align-items:center; gap: 6px; font-size: 0.68rem; color: var(--text-dim); font-family: var(--font-mono); margin-top: 2px; }
-  .chat-status .dot{ width: 6px; height:6px; border-radius:50%; background:#3fbf76; box-shadow: 0 0 0 3px rgba(63,191,118,0.18); }
+  .chat-status{ display:flex; align-items:center; gap: 6px; font-size: 0.66rem; color: var(--text-dim); font-family: var(--font-mono); margin-top: 2px; }
+  .chat-status .dot{ width: 6px; height:6px; border-radius:50%; background:#3fbf76; box-shadow: 0 0 0 3px rgba(63,191,118,0.18); flex-shrink:0; }
+  .chat-status .dot.busy{ background:#e0a83f; box-shadow: 0 0 0 3px rgba(224,168,63,0.18); animation: statusBusy 1s ease-in-out infinite; }
+  @keyframes statusBusy{ 0%,100%{ opacity:1;} 50%{ opacity:0.4; } }
   .chat-header-actions{ display:flex; gap: 4px; }
   .chat-header-actions button{
     width: 30px; height: 30px; border-radius: 8px; display:flex; align-items:center; justify-content:center;
@@ -529,15 +536,36 @@
 
   .chat-body{
     flex:1; overflow-y:auto; padding: 16px; display:flex; flex-direction:column; gap: 10px;
-    background: var(--bg-soft);
+    background: var(--bg-soft); position: relative;
   }
   .msg{
-    max-width: 84%; font-size: 0.85rem; line-height: 1.65; padding: 10px 14px;
-    border-radius: 13px; animation: msgIn 0.3s ease;
+    max-width: 88%; font-size: 0.85rem; line-height: 1.7; padding: 10px 14px;
+    border-radius: 13px; animation: msgIn 0.3s ease; overflow-wrap: anywhere;
   }
   @keyframes msgIn{ from{ opacity:0; transform: translateY(6px); } to{ opacity:1; transform: translateY(0); } }
   .msg-bot{ align-self:flex-start; background: var(--surface-2); border: 1px solid var(--border-soft); color: var(--text); border-bottom-left-radius: 4px; }
   .msg-user{ align-self:flex-end; background: linear-gradient(135deg, var(--gold), var(--gold-deep)); color:#14100a; border-bottom-right-radius: 4px; }
+  .msg-error{ align-self:flex-start; background: rgba(214,90,90,0.1); border: 1px solid rgba(214,90,90,0.35); color: #e19a9a; border-bottom-left-radius: 4px; }
+
+  /* صور مرفقة داخل فقاعة رسالة المستخدم */
+  .msg-images{ display:flex; flex-wrap:wrap; gap: 6px; margin-bottom: 8px; }
+  .msg-images img{ width: 56px; height: 56px; object-fit:cover; border-radius: 8px; border: 1px solid rgba(20,16,10,0.25); }
+
+  /* تنسيق المحتوى الغني القادم من نموذج الذكاء الاصطناعي (جداول التخمين الإنشائي) */
+  .ai-rich-content{ font-size: 0.85rem; line-height: 1.75; }
+  .ai-rich-content p{ margin: 0 0 8px; }
+  .ai-rich-content ul, .ai-rich-content ol{ margin: 0 0 8px; padding-inline-start: 20px; }
+  .ai-rich-content strong{ color: var(--gold-bright); }
+  .ai-rich-content .table-scroll{ overflow-x:auto; margin: 10px 0; border: 1px solid var(--border-soft); border-radius: 8px; }
+  .ai-rich-content table{ width:100%; border-collapse: collapse; font-size: 0.78rem; min-width: 420px; }
+  .ai-rich-content thead th{
+    background: rgba(201,161,90,0.14); color: var(--gold-bright); font-family: var(--font-mono);
+    font-size: 0.68rem; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 9px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border);
+  }
+  .ai-rich-content tbody td{ padding: 8px 10px; border-bottom: 1px solid var(--border-soft); color: var(--text); }
+  .ai-rich-content tbody tr:last-child td{ border-bottom: none; }
+  .ai-rich-content tbody tr:nth-child(even){ background: rgba(255,255,255,0.02); }
 
   .typing-indicator{
     display:flex; gap: 4px; align-self:flex-start; padding: 13px 15px;
@@ -556,6 +584,23 @@
   }
   .quick-reply:hover{ border-color: var(--gold); background: rgba(201,161,90,0.08); }
 
+  /* شريط معاينة الصور المرفقة قبل الإرسال */
+  .chat-attachments{
+    display:none; gap: 8px; padding: 10px 12px 0; flex-shrink:0; overflow-x:auto;
+  }
+  .chat-attachments.has-files{ display:flex; }
+  .attach-thumb{
+    position: relative; width: 54px; height: 54px; border-radius: 9px; overflow:hidden;
+    border: 1px solid var(--border); flex-shrink:0; background: var(--bg-soft);
+  }
+  .attach-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .attach-thumb button{
+    position:absolute; top:2px; left:2px; width: 17px; height:17px; border-radius:50%;
+    background: rgba(10,13,18,0.75); color:#fff; display:flex; align-items:center; justify-content:center;
+    font-size: 10px; line-height:1;
+  }
+  .attach-thumb button:hover{ background: #c0483f; }
+
   .chat-input{ display:flex; align-items:center; gap: 8px; padding: 12px; border-top: 1px solid var(--border-soft); flex-shrink:0; }
   .chat-input input{
     flex:1; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px;
@@ -563,17 +608,50 @@
   }
   .chat-input input:focus{ border-color: var(--gold); }
   .chat-input input::placeholder{ color: var(--text-dim); }
+  .chat-input input:disabled{ opacity: 0.5; }
   .chat-input button{
-    width: 38px; height: 38px; border-radius: 10px; background: var(--gold); color:#14100a;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0; transition: background-color 0.25s ease;
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
   }
-  .chat-input button:hover{ background: var(--gold-bright); }
+  .chat-attach-btn{ background: transparent; border: 1px solid var(--border); color: var(--text-muted); position:relative; }
+  .chat-attach-btn:hover{ border-color: var(--gold); color: var(--gold); }
+  .chat-attach-btn .attach-count{
+    position:absolute; top:-6px; left:-6px; background: var(--gold); color:#14100a;
+    font-family: var(--font-mono); font-size: 0.6rem; font-weight:700; width:16px; height:16px;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+  }
+  .chat-send-btn{ background: var(--gold); color:#14100a; border: none; }
+  .chat-send-btn:hover{ background: var(--gold-bright); }
+  .chat-send-btn:disabled{ opacity: 0.45; cursor: not-allowed; }
+  .chat-mic-btn{ background: transparent; border: 1px solid var(--border); color: var(--text-muted); position:relative; }
+  .chat-mic-btn:hover{ border-color: var(--gold); color: var(--gold); }
+  .chat-mic-btn.listening{
+    background: rgba(214,90,90,0.14); border-color: #d65a5a; color: #ff6b6b;
+    animation: micPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes micPulse{
+    0%,100%{ box-shadow: 0 0 0 0 rgba(214,90,90,0.45); }
+    50%{ box-shadow: 0 0 0 6px rgba(214,90,90,0); }
+  }
+  .chat-mic-btn:disabled{ opacity: 0.35; cursor: not-allowed; }
+  @media (prefers-reduced-motion: reduce){ .chat-mic-btn.listening{ animation: none; } }
+  .visually-hidden{ position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; padding:0; margin:-1px; }
 
-  .chat-disclaimer{ font-size: 0.63rem; color: var(--text-dim); text-align:center; padding: 0 12px 12px; font-family: var(--font-mono); flex-shrink:0; }
+  .chat-disclaimer{ font-size: 0.62rem; color: var(--text-dim); text-align:center; padding: 0 12px 12px; font-family: var(--font-mono); flex-shrink:0; }
+
+  /* منطقة السحب والإفلات */
+  .chat-dropzone{
+    position:absolute; inset:0; z-index: 5; display:none; align-items:center; justify-content:center;
+    flex-direction:column; gap: 10px; text-align:center; padding: 20px;
+    background: rgba(10,13,18,0.88); border: 2px dashed var(--gold); border-radius: 12px; margin: 8px;
+    color: var(--gold-bright); font-size: 0.85rem;
+  }
+  .chat-window.dragging .chat-dropzone{ display:flex; }
+  .chat-dropzone svg{ width: 34px; height:34px; color: var(--gold); }
 
   @media (max-width: 480px){
-    .chat-fab{ right: 16px; bottom: 16px; width: 56px; height: 56px; }
-    .chat-window{ right: 10px; left: 10px; width: auto; bottom: 84px; height: min(72vh, 560px); }
+    .chat-fab{ right: 16px; bottom: 16px; width: 58px; height: 58px; }
+    .chat-window{ right: 10px; left: 10px; width: auto; bottom: 86px; height: min(78vh, 620px); }
   }
 </style>
 </head>
@@ -845,22 +923,29 @@
   </div>
 </div>
 
-<!-- ============ المساعد الهندسي الذكي (Chatbot) ============ -->
-<button class="chat-fab" id="chatFab" aria-label="فتح المساعد الهندسي الذكي" aria-haspopup="dialog" aria-expanded="false">
+<!-- ============ مستشار وحاسبة هندسية ذكية (AI Chatbot) ============ -->
+<button class="chat-fab" id="chatFab" aria-label="فتح المستشار الهندسي الذكي" aria-haspopup="dialog" aria-expanded="false">
   <span class="fab-pulse" aria-hidden="true"></span>
   <span class="fab-badge" aria-hidden="true"></span>
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+    <path d="M3 21v-6l13-13a2.12 2.12 0 013 3L6 18H3z"/>
+    <path d="M14 6l3 3"/>
+    <path d="M3 21h6"/>
   </svg>
 </button>
 
-<div class="chat-window" id="chatWindow" role="dialog" aria-modal="false" aria-label="المساعد الهندسي الذكي" aria-hidden="true">
+<div class="chat-window" id="chatWindow" role="dialog" aria-modal="false" aria-label="مستشار وحاسبة هندسية ذكية" aria-hidden="true">
+  <div class="chat-dropzone" id="chatDropzone" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+    <span>أفلت الصور أو المخططات هنا للتحليل (حتى 10 صور)</span>
+  </div>
+
   <div class="chat-header">
     <div class="chat-header-info">
       <div class="chat-avatar">M</div>
       <div>
-        <h4>المساعد الهندسي الذكي</h4>
-        <div class="chat-status"><span class="dot" aria-hidden="true"></span> متصل الآن</div>
+        <h4>مستشار وحاسبة هندسية ذكية</h4>
+        <div class="chat-status" id="chatStatus"><span class="dot" id="chatStatusDot" aria-hidden="true"></span> <span id="chatStatusText">متصل الآن</span></div>
       </div>
     </div>
     <div class="chat-header-actions">
@@ -875,62 +960,72 @@
 
   <div class="chat-body" id="chatBody"></div>
   <div class="chat-quick-replies" id="chatQuickReplies"></div>
+  <div class="chat-attachments" id="chatAttachments"></div>
 
   <form class="chat-input" id="chatForm">
-    <input type="text" id="chatInput" placeholder="اكتب استفسارك الهندسي هنا..." autocomplete="off" aria-label="اكتب رسالتك للمساعد الهندسي">
-    <button type="submit" id="chatSend" aria-label="إرسال الرسالة">
+    <input type="file" id="chatFileInput" class="visually-hidden" accept="image/*" multiple aria-hidden="true" tabindex="-1">
+    <button type="button" class="chat-attach-btn" id="chatAttachBtn" aria-label="إرفاق صور أو مخططات (حتى 10 صور)" title="إرفاق صور / مخططات">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+      <span class="attach-count" id="attachCount" style="display:none;">0</span>
+    </button>
+    <button type="button" class="chat-mic-btn" id="chatMicBtn" aria-label="التحدث بدل الكتابة" title="إدخال صوتي" aria-pressed="false">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0"/><path d="M12 18v3"/></svg>
+    </button>
+    <input type="text" id="chatInput" placeholder="اكتب استفسارك أو أبعادك الهندسية هنا..." autocomplete="off" aria-label="اكتب رسالتك للمستشار الهندسي">
+    <button type="submit" class="chat-send-btn" id="chatSend" aria-label="إرسال الرسالة">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
     </button>
   </form>
-  <p class="chat-disclaimer">إجابات إرشادية مبدئية — للاستشارات الدقيقة والمشاريع الفعلية تواصل مباشرة مع المهندس مجاهد.</p>
+  <p class="chat-disclaimer">تخمينات هندسية آلية مبنية على معادلات موقعية معيارية — راجع مهندساً مختصاً قبل تنفيذ العناصر الحاملة فعلياً.</p>
 </div>
+
+<!-- مكتبة تعقيم HTML القادم من نموذج الذكاء الاصطناعي قبل عرضه في الصفحة (حماية من XSS) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
 
 <script>
 (function(){
   "use strict";
 
-  /* ---------- قاعدة معرفة مبسطة للأسئلة الهندسية الشائعة ---------- */
-  /* هذا محرك ردود محلي (Keyword Matching) يعمل بالكامل داخل المتصفح دون أي اتصال خارجي.
-     لربط المساعد بذكاء اصطناعي حقيقي عبر API، ستحتاج لخادم وسيط (Backend) يحفظ مفتاح
-     الـ API بأمان، لأن أي مفتاح يوضع مباشرة في كود الموقع سيكون مكشوفاً للجميع. */
-  var KB = [
-    { keys:['اشراف','إشراف','مهندس موقع'], a: "مهندس الموقع مسؤول عن متابعة التنفيذ ميدانياً ومطابقته للمخططات المعتمدة، وتوثيق سير العمل اليومي، وتنسيق العمل بين المقاول والاستشاري، ورفع أي ملاحظات فنية أو انحرافات عن المخطط فور اكتشافها." },
-    { keys:['جودة','qa','qc','ضبط الجودة'], a: "ضبط الجودة QA/QC يعتمد على التأكد من مطابقة المواد ومراحل التنفيذ للمواصفات القياسية، عبر فحوصات دورية (كاختبار الهبوط للخرسانة الطازجة، ومكعبات الفحص، واختبار الشد لحديد التسليح)، وتوثيق كل فحص بتقرير معتمد قبل الانتقال للمرحلة التالية." },
-    { keys:['كميات','boq','حساب الكميات'], a: "حساب الكميات (Quantity Surveying) هو استخراج كميات المواد والأعمال من المخططات الهندسية (كالخرسانة، حديد التسليح، الطابوق، التشطيبات)، وتحويلها إلى جدول كميات BOQ يُستخدم لتسعير المشروع ومتابعة المستخلصات المالية." },
-    { keys:['osha','سلامة مهنية','السلامة المهنية'], a: "معايير OSHA للسلامة المهنية تشمل استخدام معدات الوقاية الشخصية PPE، تأمين مناطق العمل بالارتفاعات والحفريات، فحص المعدات دورياً، ووضع خطط طوارئ وإخلاء واضحة لكل موقع تنفيذ." },
-    { keys:['رفع','lifting','اوناش','أوناش','كرين'], a: "السلامة في أعمال الرفع تشمل التأكد من سلامة الأوناش والسلاسل قبل الاستخدام، عدم تجاوز الحمل الأقصى المسموح، تحديد نطاق أمان حول منطقة الرفع، ووجود مشرف رفع مؤهل (Rigger) لكل عملية." },
-    { keys:['revit','بيم','bim'], a: "برنامج Revit يُستخدم للنمذجة الرقمية للمباني BIM، حيث يتيح إعداد نموذج ثلاثي الأبعاد متكامل يجمع التصميم الإنشائي والمعماري، ويقلل التعارض بين التخصصات قبل التنفيذ." },
-    { keys:['autocad','أوتوكاد','اوتوكاد'], a: "برنامج AutoCAD يُستخدم لإعداد وتحرير المخططات الهندسية ثنائية الأبعاد كالمخططات الإنشائية والمعمارية، وفق معايير الرسم الاحترافي (الطبقات، المقياس، الأبعاد)." },
-    { keys:['خرسانة','باطون','concrete'], a: "من أهم فحوصات الخرسانة: اختبار الهبوط (Slump Test) لقياس قابلية التشغيل، وفحص مكعبات أو أسطوانات الخرسانة بعد 7 و28 يوماً لقياس مقاومة الانضغاط، مع توثيق كل نتيجة ومطابقتها للمواصفة المعتمدة." },
-    { keys:['حديد','تسليح','steel'], a: "فحص حديد التسليح يشمل التأكد من القطر والمواصفة المطابقة للمخطط الإنشائي، وعمل اختبار الشد (Tensile Test) للتحقق من إجهاد الخضوع والانكسار، والتأكد من التغطية الخرسانية الصحيحة قبل الصب." },
-    { keys:['شهاد','شهادات','خبرة','مؤهلات'], a: "يمكنك الاطلاع على الشهادات المهنية الكاملة للمهندس مجاهد في قسم «الشهادات» أعلى الصفحة، وتشمل OSHA، QA/QC، السلامة في أعمال الرفع، وشهادة إعداد مهندس موقع." },
-    { keys:['تواصل','رقم','واتساب','ايميل','بريد','اتصال'], a: "يمكنك التواصل مباشرة مع المهندس مجاهد عبر قسم «تواصل معي» أسفل الصفحة، سواء عبر البريد الإلكتروني أو واتساب." },
-    { keys:['من انت','مين انت','منت','تعريفك'], a: "أنا المساعد الهندسي الذكي في موقع المهندس مجاهد هاشم مطر، هنا لأجيب على استفساراتك الأولية حول إشراف المواقع، ضبط الجودة، السلامة المهنية وحساب الكميات." },
-    { keys:['شكرا','مشكور','تسلم','يعطيك العافية'], a: "العفو! يسعدني مساعدتك دائماً. إن احتجت أي استشارة أخرى فأنا هنا." }
-  ];
+  /* ==================================================================
+     الإعدادات: نقطة الاتصال الآمنة (Cloudflare Worker كوسيط لحماية مفتاح API)
+     لا يوضع أي مفتاح API داخل هذا الملف إطلاقاً — الـ Worker وحده يحتفظ بالمفتاح.
+     ================================================================== */
+  var WORKER_URL = "https://green-glade-57c7.mjahdhashm068.workers.dev";
+  var MAX_IMAGES = 10;
+  var MAX_TOTAL_MB = 20; // حد أقصى تقريبي لحجم الصور مجتمعة قبل الترميز
+
+  /* شخصية وتعليمات النظام: مستشار موقع وتخمين إنشائي عراقي خبير */
+  var SYSTEM_INSTRUCTION = [
+    "أنت مستشار وخبير موقع وتخمين إنشائي عراقي متمرس يعمل ضمن موقع المهندس مجاهد هاشم مطر.",
+    "تحدث بالعربية بأسلوب هندسي واثق ومباشر، مستخدماً المصطلحات الموقعية العراقية المعتمدة في السوق عند مناسبتها (صبة، شيش، سمنت، حصو، رمل، طابوق، ثرمستون، شلمان، واجهة، نزال، صب جاهز، حديد تسليح).",
+    "",
+    "قاعدة أساسية: أجب مباشرة وفوراً على أي سؤال أو تخمين كميات دون تهرب. إذا أعطاك الزائر أبعاداً (طول × عرض × ارتفاع/سماكة) لأي عنصر إنشائي، احسب الكميات فوراً باستخدام معادلات ونسب هندسية موقعية معيارية شائعة الاستخدام، حتى لو كانت الأبعاد جزئية — في هذه الحالة اذكر الافتراضات التي استخدمتها بوضوح (كسماكة الصبة الافتراضية أو نسبة الخلطة) واستمر بالحساب. لا تكتفِ أبداً بإحالة الزائر للتواصل المباشر مع المهندس كبديل عن الحساب.",
+    "",
+    "عند تحليل صور أو مخططات مرفقة: اقرأ الأبعاد والمساحات والأعمدة الظاهرة إن وجدت، واستنتج ما يلزم لتقديم تخمين تقريبي، واذكر بوضوح أي قياس افترضته لعدم وضوحه في الصورة.",
+    "",
+    "معادلات ونسب مرجعية شائعة يمكن استخدامها كأساس للحساب (عدّلها حسب معطيات السؤال ونوع الخلطة المذكورة إن وجدت):",
+    "- حجم الخرسانة (م³) = الطول × العرض × السماكة، مع إضافة نسبة هدر تقديرية 3-5%.",
+    "- لخلطة خرسانة عادية 1:2:4: تقريباً 6.5-7 أكياس سمنت لكل م³، وحوالي 0.45-0.5 م³ رمل، و0.85-0.9 م³ حصو لكل م³ خرسانة.",
+    "- وزن حديد التسليح التقديري: يتراوح عادة بين 80-100 كغم/م³ للأسقف والجسور، و100-130 كغم/م³ للأعمدة والأساسات، حسب نوع العنصر ودرجة التسليح — وضّح أنه رقم تقريبي قابل للتغير حسب المخطط الإنشائي المعتمد.",
+    "- عدد الطابوق: للجدار العادي (طابوقة 24×11.5×7 سم تقريباً) يقدَّر بحوالي 55-60 طابوقة لكل م² لجدار سماكة طابوقة واحدة (مع احتساب مونة الرص)، ونحو 100-110 طابوقة لكل م² لجدار سماكتين. لجدران الثرمستون استخدم أبعاد البلوك المعطى إن ذُكر، وإلا استخدم مقاساً شائعاً (مثلاً 40×20×20 سم) واذكر أنه افتراضي.",
+    "- كميات الحفر: حجم الحفرية (م³) = الطول × العرض × العمق للأساسات أو القواعد، مضافاً إليها هامش عمل تقديري.",
+    "",
+    "شكل الإخراج المطلوب لأي تخمين كميات: قدّم أولاً سطراً أو سطرين يلخصان الفهم والافتراضات، ثم جدول HTML منظم بعمود <table> يحتوي على الأعمدة التالية بالضبط بهذا الترتيب: الفقرة، المادة، الكمية المطلوبة، وحدة القياس، نسبة الهدر المتوقعة. استخدم وسوم HTML قياسية فقط (table, thead, tbody, tr, th, td, p, ul, li, strong) دون أي أنماط أو سكربتات مضمّنة. بعد الجدول أضف فقرة قصيرة (2-3 أسطر) بنصائح هندسية موقعية عملية لتقليل الكلفة أو حماية المنشأة تخص هذا العنصر تحديداً.",
+    "",
+    "إذا كان السؤال استشارياً عاماً (وليس طلب تخمين كميات)، أجب بإجابة هندسية مباشرة ومفصلة دون جدول، وبنفس الأسلوب الواثق.",
+    "",
+    "ضابط أمان واحد فقط: إن كان التخمين يخص عنصراً إنشائياً حاملاً للأحمال بشكل مباشر (عمود، جسر، أساس، سقف)، أضف بعد تقديم الجدول والحساب الكامل سطراً واحداً مختصراً في نهاية الرد يذكّر بضرورة مطابقة النتيجة مع المخطط الإنشائي المعتمد ومراجعة مهندس إنشائي مختص قبل التنفيذ الفعلي، دون أن يمنعك ذلك من تقديم الحساب الكامل والمباشر أولاً.",
+    "لا تستخدم أي عبارات تهرب عامة مثل 'يفضل التواصل مع مهندس' كبديل عن تقديم رقم — الزائر يريد رقماً وجدولاً محسوبَين الآن."
+  ].join("\n");
 
   var QUICK = [
-    "ما هو دور مهندس الموقع؟",
-    "ما الفرق بين QA وQC؟",
-    "كيف يتم حساب الكميات؟",
-    "ما معايير OSHA للسلامة؟"
+    "احسب خرسانة سقف 150 م² سماكة 12 سم",
+    "كم كيس سمنت لصبة 10 م³؟",
+    "كمية الطابوق لجدار 20 م²",
+    "حلل هذا المخطط وقدّم تخميناً شاملاً"
   ];
 
-  var FALLBACK = "شكراً لسؤالك! هذا الاستفسار يحتاج تفصيلاً أدق حسب طبيعة مشروعك — أنصحك بالتواصل المباشر مع المهندس مجاهد عبر قسم «تواصل معي» ليقدّم لك استشارة دقيقة ومخصصة.";
-
-  function findAnswer(text){
-    var t = text.trim().toLowerCase();
-    if(!t) return null;
-    for(var i=0;i<KB.length;i++){
-      for(var j=0;j<KB[i].keys.length;j++){
-        if(t.indexOf(KB[i].keys[j].toLowerCase()) !== -1){
-          return KB[i].a;
-        }
-      }
-    }
-    return null;
-  }
-
+  /* ---------- عناصر DOM ---------- */
   var fab = document.getElementById('chatFab');
   var win = document.getElementById('chatWindow');
   var body = document.getElementById('chatBody');
@@ -939,15 +1034,80 @@
   var closeBtn = document.getElementById('chatClose');
   var minBtn = document.getElementById('chatMinimize');
   var quickWrap = document.getElementById('chatQuickReplies');
+  var attachBtn = document.getElementById('chatAttachBtn');
+  var micBtn = document.getElementById('chatMicBtn');
+  var fileInput = document.getElementById('chatFileInput');
+  var attachCountBadge = document.getElementById('attachCount');
+  var attachmentsWrap = document.getElementById('chatAttachments');
+  var dropzone = document.getElementById('chatDropzone');
+  var sendBtn = document.getElementById('chatSend');
+  var statusDot = document.getElementById('chatStatusDot');
+  var statusText = document.getElementById('chatStatusText');
+
   var hasOpenedBefore = false;
   var isMinimized = false;
+  var isBusy = false;
+  var selectedFiles = []; // { file, base64, mimeType, previewUrl }
 
+  /* ---------- أدوات مساعدة عامة ---------- */
   function scrollToBottom(){ body.scrollTop = body.scrollHeight; }
 
-  function addMessage(text, sender){
+  function setBusy(busy){
+    isBusy = busy;
+    input.disabled = busy;
+    sendBtn.disabled = busy;
+    attachBtn.disabled = busy;
+    micBtn.disabled = busy;
+    statusDot.classList.toggle('busy', busy);
+    statusText.textContent = busy ? "جاري التحليل والحساب..." : "متصل الآن";
+  }
+
+  function addTextMessage(text, sender){
     var div = document.createElement('div');
-    div.className = 'msg ' + (sender === 'user' ? 'msg-user' : 'msg-bot');
+    div.className = 'msg ' + (sender === 'user' ? 'msg-user' : sender === 'error' ? 'msg-error' : 'msg-bot');
     div.textContent = text;
+    body.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function addUserMessage(text, images){
+    var div = document.createElement('div');
+    div.className = 'msg msg-user';
+    if(images && images.length){
+      var imgWrap = document.createElement('div');
+      imgWrap.className = 'msg-images';
+      images.forEach(function(im){
+        var img = document.createElement('img');
+        img.src = im.previewUrl;
+        img.alt = "صورة مرفقة من الزائر";
+        imgWrap.appendChild(img);
+      });
+      div.appendChild(imgWrap);
+    }
+    if(text){
+      var p = document.createElement('div');
+      p.textContent = text;
+      div.appendChild(p);
+    }
+    body.appendChild(div);
+    scrollToBottom();
+  }
+
+  function addRichBotMessage(rawHtml){
+    var div = document.createElement('div');
+    div.className = 'msg msg-bot ai-rich-content';
+    var safeHtml = (window.DOMPurify ? DOMPurify.sanitize(rawHtml, { ALLOWED_TAGS: ['p','ul','ol','li','strong','em','table','thead','tbody','tr','th','td','br','h4','h5'] }) : rawHtml.replace(/<script[\s\S]*?<\/script>/gi, ''));
+    // لف أي جدول بحاوية قابلة للتمرير الأفقي لضمان الاستجابة على الجوال
+    var container = document.createElement('div');
+    container.innerHTML = safeHtml;
+    container.querySelectorAll('table').forEach(function(table){
+      var scrollWrap = document.createElement('div');
+      scrollWrap.className = 'table-scroll';
+      table.parentNode.insertBefore(scrollWrap, table);
+      scrollWrap.appendChild(table);
+    });
+    div.innerHTML = container.innerHTML;
     body.appendChild(div);
     scrollToBottom();
   }
@@ -965,15 +1125,268 @@
     if(t) t.remove();
   }
 
-  function botReply(userText){
-    showTyping();
-    var delay = 550 + Math.random() * 500;
-    setTimeout(function(){
-      hideTyping();
-      addMessage(findAnswer(userText) || FALLBACK, 'bot');
-    }, delay);
+  /* ---------- إدارة المرفقات (اختيار / سحب وإفلات / حذف) ---------- */
+  function fileToBase64(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(){
+        var result = reader.result; // "data:image/jpeg;base64,XXXX"
+        var base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
+  function totalSizeMB(){
+    var bytes = selectedFiles.reduce(function(sum, f){ return sum + f.file.size; }, 0);
+    return bytes / (1024 * 1024);
+  }
+
+  function renderAttachments(){
+    attachmentsWrap.innerHTML = '';
+    attachmentsWrap.classList.toggle('has-files', selectedFiles.length > 0);
+    selectedFiles.forEach(function(item, idx){
+      var thumb = document.createElement('div');
+      thumb.className = 'attach-thumb';
+      var img = document.createElement('img');
+      img.src = item.previewUrl;
+      img.alt = "معاينة صورة مرفقة " + (idx + 1);
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.setAttribute('aria-label', 'إزالة الصورة');
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', function(){
+        URL.revokeObjectURL(item.previewUrl);
+        selectedFiles.splice(idx, 1);
+        renderAttachments();
+      });
+      thumb.appendChild(img);
+      thumb.appendChild(removeBtn);
+      attachmentsWrap.appendChild(thumb);
+    });
+    if(selectedFiles.length > 0){
+      attachCountBadge.style.display = 'flex';
+      attachCountBadge.textContent = String(selectedFiles.length);
+    } else {
+      attachCountBadge.style.display = 'none';
+    }
+  }
+
+  function addFiles(fileList){
+    var incoming = Array.prototype.filter.call(fileList, function(f){ return f.type && f.type.indexOf('image/') === 0; });
+    if(!incoming.length) return;
+    var room = MAX_IMAGES - selectedFiles.length;
+    if(room <= 0){
+      addTextMessage("وصلت للحد الأقصى (" + MAX_IMAGES + " صور). احذف صورة من المعاينة قبل إضافة غيرها.", 'error');
+      return;
+    }
+    var toAdd = incoming.slice(0, room);
+    toAdd.forEach(function(file){
+      var item = { file: file, previewUrl: URL.createObjectURL(file), mimeType: file.type };
+      selectedFiles.push(item);
+    });
+    if(incoming.length > toAdd.length){
+      addTextMessage("تم إرفاق " + toAdd.length + " صور فقط للوصول إلى الحد الأقصى (" + MAX_IMAGES + ").", 'error');
+    }
+    if(totalSizeMB() > MAX_TOTAL_MB){
+      addTextMessage("حجم الصور المجمّع كبير نسبياً وقد يبطئ التحليل — يفضّل تقليل عدد الصور أو استخدام صور بدقة أقل.", 'error');
+    }
+    renderAttachments();
+  }
+
+  attachBtn.addEventListener('click', function(){ if(!isBusy) fileInput.click(); });
+  fileInput.addEventListener('change', function(){
+    addFiles(fileInput.files);
+    fileInput.value = ''; // يسمح باختيار نفس الملف مرة أخرى لاحقاً
+  });
+
+  /* سحب وإفلات الصور فوق نافذة المحادثة */
+  ['dragenter','dragover'].forEach(function(evt){
+    win.addEventListener(evt, function(e){
+      if(!win.classList.contains('open') || isBusy) return;
+      e.preventDefault();
+      win.classList.add('dragging');
+    });
+  });
+  ['dragleave','drop'].forEach(function(evt){
+    win.addEventListener(evt, function(e){
+      e.preventDefault();
+      if(evt === 'dragleave' && e.target !== dropzone && win.contains(e.relatedTarget)) return;
+      win.classList.remove('dragging');
+    });
+  });
+  win.addEventListener('drop', function(e){
+    if(isBusy) return;
+    e.preventDefault();
+    if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){
+      addFiles(e.dataTransfer.files);
+    }
+  });
+
+  /* ---------- الإدخال الصوتي (المايك) عبر Web Speech API ---------- */
+  var SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recognition = null;
+  var isListening = false;
+
+  if(SpeechRecognitionAPI){
+    recognition = new SpeechRecognitionAPI();
+    recognition.lang = 'ar-IQ';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    var baseTextBeforeListening = '';
+
+    recognition.addEventListener('start', function(){
+      isListening = true;
+      baseTextBeforeListening = input.value ? (input.value.trim() + ' ') : '';
+      micBtn.classList.add('listening');
+      micBtn.setAttribute('aria-pressed', 'true');
+      micBtn.title = 'إيقاف الاستماع';
+      statusText.textContent = 'أستمع الآن...';
+    });
+
+    recognition.addEventListener('result', function(e){
+      var transcript = '';
+      for(var i = 0; i < e.results.length; i++){
+        transcript += e.results[i][0].transcript;
+      }
+      input.value = baseTextBeforeListening + transcript;
+    });
+
+    recognition.addEventListener('error', function(e){
+      isListening = false;
+      micBtn.classList.remove('listening');
+      micBtn.setAttribute('aria-pressed', 'false');
+      micBtn.title = 'إدخال صوتي';
+      if(e.error === 'not-allowed' || e.error === 'permission-denied'){
+        addTextMessage('تعذّر الوصول إلى المايكروفون — تأكد من السماح بإذن الميكروفون لهذا الموقع من إعدادات المتصفح.', 'error');
+      } else if(e.error !== 'no-speech' && e.error !== 'aborted'){
+        addTextMessage('تعذّر التعرف على الصوت هذه المرة. حاول مجدداً أو اكتب استفسارك مباشرة.', 'error');
+      }
+      if(!isBusy) statusText.textContent = 'متصل الآن';
+    });
+
+    recognition.addEventListener('end', function(){
+      isListening = false;
+      micBtn.classList.remove('listening');
+      micBtn.setAttribute('aria-pressed', 'false');
+      micBtn.title = 'إدخال صوتي';
+      if(!isBusy) statusText.textContent = 'متصل الآن';
+      input.focus();
+    });
+
+    micBtn.addEventListener('click', function(){
+      if(isBusy) return;
+      if(isListening){
+        recognition.stop();
+      } else {
+        try{ recognition.start(); }
+        catch(e){ /* قد يُطلق خطأ إذا كان التعرف يعمل أصلاً؛ يُتجاهل بأمان */ }
+      }
+    });
+  } else {
+    // المتصفح لا يدعم التعرف الصوتي (مثل فَيَرفُكس) — تعطيل الزر بلطف بدل إخفائه
+    micBtn.disabled = true;
+    micBtn.title = 'الإدخال الصوتي غير مدعوم في هذا المتصفح';
+    micBtn.style.opacity = '0.35';
+    micBtn.style.cursor = 'not-allowed';
+  }
+
+  /* ---------- استدعاء الذكاء الاصطناعي عبر Cloudflare Worker ---------- */
+  function buildRequestParts(userText){
+    var parts = [];
+    if(userText) parts.push({ text: userText });
+    selectedFiles.forEach(function(item){
+      parts.push({ inlineData: { mimeType: item.mimeType, data: item.base64 } });
+    });
+    return parts;
+  }
+
+  function extractResponseText(data){
+    try{
+      var candidate = data.candidates && data.candidates[0];
+      var parts = candidate && candidate.content && candidate.content.parts;
+      if(!parts || !parts.length) return null;
+      return parts.map(function(p){ return p.text || ''; }).join('');
+    }catch(e){ return null; }
+  }
+
+  function looksLikeHtml(text){
+    return /<table[\s>]|<p[\s>]|<ul[\s>]|<strong[\s>]/i.test(text);
+  }
+
+  function plainTextToParagraphs(text){
+    return text.split(/\n{2,}/).map(function(block){
+      return '<p>' + block.replace(/\n/g, '<br>').replace(/[&<>]/g, function(c){
+        return c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;';
+      }) + '</p>';
+    }).join('');
+  }
+
+  async function sendToAssistant(userText){
+    if(isListening && recognition){ recognition.stop(); }
+    var imagesForBubble = selectedFiles.map(function(f){ return { previewUrl: f.previewUrl }; });
+    addUserMessage(userText, imagesForBubble);
+
+    setBusy(true);
+    showTyping();
+
+    try{
+      // ترميز الصور إلى Base64 قبل الإرسال
+      for(var i = 0; i < selectedFiles.length; i++){
+        if(!selectedFiles[i].base64){
+          selectedFiles[i].base64 = await fileToBase64(selectedFiles[i].file);
+        }
+      }
+
+      var requestBody = {
+        contents: [
+          { role: "user", parts: buildRequestParts(userText) }
+        ],
+        systemInstruction: {
+          parts: [ { text: SYSTEM_INSTRUCTION } ]
+        }
+      };
+
+      // تفريغ المرفقات بعد بنائها ضمن الطلب
+      selectedFiles.forEach(function(item){ URL.revokeObjectURL(item.previewUrl); });
+      selectedFiles = [];
+      renderAttachments();
+
+      var res = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if(!res.ok){ throw new Error('HTTP ' + res.status); }
+      var data = await res.json();
+      var text = extractResponseText(data);
+
+      hideTyping();
+      setBusy(false);
+
+      if(!text){
+        addTextMessage("لم يصل ردّ واضح من المستشار الذكي هذه المرة. أعد صياغة سؤالك أو حاول مجدداً خلال لحظات.", 'error');
+        return;
+      }
+
+      if(looksLikeHtml(text)){
+        addRichBotMessage(text);
+      } else {
+        addRichBotMessage(plainTextToParagraphs(text));
+      }
+    } catch(err){
+      hideTyping();
+      setBusy(false);
+      addTextMessage("تعذّر الوصول إلى خدمة المستشار الذكي حالياً (قد يكون بسبب الاتصال أو الخادم). أعد المحاولة خلال لحظات، أو تواصل مباشرة عبر قسم «تواصل معي» لاستشارة فورية من المهندس مجاهد.", 'error');
+    }
+  }
+
+  /* ---------- الردود السريعة ---------- */
   function renderQuickReplies(){
     quickWrap.innerHTML = '';
     QUICK.forEach(function(q){
@@ -982,20 +1395,21 @@
       btn.className = 'quick-reply';
       btn.textContent = q;
       btn.addEventListener('click', function(){
-        addMessage(q, 'user');
-        botReply(q);
+        if(isBusy) return;
+        sendToAssistant(q);
       });
       quickWrap.appendChild(btn);
     });
   }
 
+  /* ---------- فتح/إغلاق/تصغير النافذة ---------- */
   function openChat(){
     win.classList.add('open');
     win.setAttribute('aria-hidden', 'false');
     fab.setAttribute('aria-expanded', 'true');
     if(!hasOpenedBefore){
       hasOpenedBefore = true;
-      addMessage('أهلاً بك! أنا المساعد الهندسي الذكي في موقع المهندس مجاهد. كيف يمكنني مساعدتك اليوم في استشاراتك الهندسية؟', 'bot');
+      addTextMessage('أهلاً بك! أنا المستشار الهندسي الذكي في موقع المهندس مجاهد. اكتب أبعادك أو استفسارك الإنشائي — صبة، طابوق، حديد تسليح، حفريات، أو أي عنصر — وسأحسب لك الكميات فوراً بجدول تفصيلي، ويمكنك أيضاً إرفاق مخططات أو صور لتحليلها مباشرة.', 'bot');
       renderQuickReplies();
     }
     setTimeout(function(){ input.focus(); }, 300);
@@ -1004,6 +1418,7 @@
   function closeChat(){
     win.classList.remove('open');
     win.classList.remove('minimized');
+    win.classList.remove('dragging');
     win.setAttribute('aria-hidden', 'true');
     fab.setAttribute('aria-expanded', 'false');
     isMinimized = false;
@@ -1029,11 +1444,11 @@
 
   form.addEventListener('submit', function(e){
     e.preventDefault();
+    if(isBusy) return;
     var text = input.value.trim();
-    if(!text) return;
-    addMessage(text, 'user');
+    if(!text && selectedFiles.length === 0) return;
     input.value = '';
-    botReply(text);
+    sendToAssistant(text);
   });
 
   document.addEventListener('keydown', function(e){
