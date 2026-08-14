@@ -845,6 +845,204 @@
   </div>
 </div>
 
+<!-- ============ المساعد الهندسي الذكي (Chatbot) ============ -->
+<button class="chat-fab" id="chatFab" aria-label="فتح المساعد الهندسي الذكي" aria-haspopup="dialog" aria-expanded="false">
+  <span class="fab-pulse" aria-hidden="true"></span>
+  <span class="fab-badge" aria-hidden="true"></span>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+  </svg>
+</button>
+
+<div class="chat-window" id="chatWindow" role="dialog" aria-modal="false" aria-label="المساعد الهندسي الذكي" aria-hidden="true">
+  <div class="chat-header">
+    <div class="chat-header-info">
+      <div class="chat-avatar">M</div>
+      <div>
+        <h4>المساعد الهندسي الذكي</h4>
+        <div class="chat-status"><span class="dot" aria-hidden="true"></span> متصل الآن</div>
+      </div>
+    </div>
+    <div class="chat-header-actions">
+      <button type="button" id="chatMinimize" aria-label="تصغير النافذة" title="تصغير">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 12h12"/></svg>
+      </button>
+      <button type="button" id="chatClose" aria-label="إغلاق النافذة" title="إغلاق">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-quick-replies" id="chatQuickReplies"></div>
+
+  <form class="chat-input" id="chatForm">
+    <input type="text" id="chatInput" placeholder="اكتب استفسارك الهندسي هنا..." autocomplete="off" aria-label="اكتب رسالتك للمساعد الهندسي">
+    <button type="submit" id="chatSend" aria-label="إرسال الرسالة">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+    </button>
+  </form>
+  <p class="chat-disclaimer">إجابات إرشادية مبدئية — للاستشارات الدقيقة والمشاريع الفعلية تواصل مباشرة مع المهندس مجاهد.</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- قاعدة معرفة مبسطة للأسئلة الهندسية الشائعة ---------- */
+  /* هذا محرك ردود محلي (Keyword Matching) يعمل بالكامل داخل المتصفح دون أي اتصال خارجي.
+     لربط المساعد بذكاء اصطناعي حقيقي عبر API، ستحتاج لخادم وسيط (Backend) يحفظ مفتاح
+     الـ API بأمان، لأن أي مفتاح يوضع مباشرة في كود الموقع سيكون مكشوفاً للجميع. */
+  var KB = [
+    { keys:['اشراف','إشراف','مهندس موقع'], a: "مهندس الموقع مسؤول عن متابعة التنفيذ ميدانياً ومطابقته للمخططات المعتمدة، وتوثيق سير العمل اليومي، وتنسيق العمل بين المقاول والاستشاري، ورفع أي ملاحظات فنية أو انحرافات عن المخطط فور اكتشافها." },
+    { keys:['جودة','qa','qc','ضبط الجودة'], a: "ضبط الجودة QA/QC يعتمد على التأكد من مطابقة المواد ومراحل التنفيذ للمواصفات القياسية، عبر فحوصات دورية (كاختبار الهبوط للخرسانة الطازجة، ومكعبات الفحص، واختبار الشد لحديد التسليح)، وتوثيق كل فحص بتقرير معتمد قبل الانتقال للمرحلة التالية." },
+    { keys:['كميات','boq','حساب الكميات'], a: "حساب الكميات (Quantity Surveying) هو استخراج كميات المواد والأعمال من المخططات الهندسية (كالخرسانة، حديد التسليح، الطابوق، التشطيبات)، وتحويلها إلى جدول كميات BOQ يُستخدم لتسعير المشروع ومتابعة المستخلصات المالية." },
+    { keys:['osha','سلامة مهنية','السلامة المهنية'], a: "معايير OSHA للسلامة المهنية تشمل استخدام معدات الوقاية الشخصية PPE، تأمين مناطق العمل بالارتفاعات والحفريات، فحص المعدات دورياً، ووضع خطط طوارئ وإخلاء واضحة لكل موقع تنفيذ." },
+    { keys:['رفع','lifting','اوناش','أوناش','كرين'], a: "السلامة في أعمال الرفع تشمل التأكد من سلامة الأوناش والسلاسل قبل الاستخدام، عدم تجاوز الحمل الأقصى المسموح، تحديد نطاق أمان حول منطقة الرفع، ووجود مشرف رفع مؤهل (Rigger) لكل عملية." },
+    { keys:['revit','بيم','bim'], a: "برنامج Revit يُستخدم للنمذجة الرقمية للمباني BIM، حيث يتيح إعداد نموذج ثلاثي الأبعاد متكامل يجمع التصميم الإنشائي والمعماري، ويقلل التعارض بين التخصصات قبل التنفيذ." },
+    { keys:['autocad','أوتوكاد','اوتوكاد'], a: "برنامج AutoCAD يُستخدم لإعداد وتحرير المخططات الهندسية ثنائية الأبعاد كالمخططات الإنشائية والمعمارية، وفق معايير الرسم الاحترافي (الطبقات، المقياس، الأبعاد)." },
+    { keys:['خرسانة','باطون','concrete'], a: "من أهم فحوصات الخرسانة: اختبار الهبوط (Slump Test) لقياس قابلية التشغيل، وفحص مكعبات أو أسطوانات الخرسانة بعد 7 و28 يوماً لقياس مقاومة الانضغاط، مع توثيق كل نتيجة ومطابقتها للمواصفة المعتمدة." },
+    { keys:['حديد','تسليح','steel'], a: "فحص حديد التسليح يشمل التأكد من القطر والمواصفة المطابقة للمخطط الإنشائي، وعمل اختبار الشد (Tensile Test) للتحقق من إجهاد الخضوع والانكسار، والتأكد من التغطية الخرسانية الصحيحة قبل الصب." },
+    { keys:['شهاد','شهادات','خبرة','مؤهلات'], a: "يمكنك الاطلاع على الشهادات المهنية الكاملة للمهندس مجاهد في قسم «الشهادات» أعلى الصفحة، وتشمل OSHA، QA/QC، السلامة في أعمال الرفع، وشهادة إعداد مهندس موقع." },
+    { keys:['تواصل','رقم','واتساب','ايميل','بريد','اتصال'], a: "يمكنك التواصل مباشرة مع المهندس مجاهد عبر قسم «تواصل معي» أسفل الصفحة، سواء عبر البريد الإلكتروني أو واتساب." },
+    { keys:['من انت','مين انت','منت','تعريفك'], a: "أنا المساعد الهندسي الذكي في موقع المهندس مجاهد هاشم مطر، هنا لأجيب على استفساراتك الأولية حول إشراف المواقع، ضبط الجودة، السلامة المهنية وحساب الكميات." },
+    { keys:['شكرا','مشكور','تسلم','يعطيك العافية'], a: "العفو! يسعدني مساعدتك دائماً. إن احتجت أي استشارة أخرى فأنا هنا." }
+  ];
+
+  var QUICK = [
+    "ما هو دور مهندس الموقع؟",
+    "ما الفرق بين QA وQC؟",
+    "كيف يتم حساب الكميات؟",
+    "ما معايير OSHA للسلامة؟"
+  ];
+
+  var FALLBACK = "شكراً لسؤالك! هذا الاستفسار يحتاج تفصيلاً أدق حسب طبيعة مشروعك — أنصحك بالتواصل المباشر مع المهندس مجاهد عبر قسم «تواصل معي» ليقدّم لك استشارة دقيقة ومخصصة.";
+
+  function findAnswer(text){
+    var t = text.trim().toLowerCase();
+    if(!t) return null;
+    for(var i=0;i<KB.length;i++){
+      for(var j=0;j<KB[i].keys.length;j++){
+        if(t.indexOf(KB[i].keys[j].toLowerCase()) !== -1){
+          return KB[i].a;
+        }
+      }
+    }
+    return null;
+  }
+
+  var fab = document.getElementById('chatFab');
+  var win = document.getElementById('chatWindow');
+  var body = document.getElementById('chatBody');
+  var form = document.getElementById('chatForm');
+  var input = document.getElementById('chatInput');
+  var closeBtn = document.getElementById('chatClose');
+  var minBtn = document.getElementById('chatMinimize');
+  var quickWrap = document.getElementById('chatQuickReplies');
+  var hasOpenedBefore = false;
+  var isMinimized = false;
+
+  function scrollToBottom(){ body.scrollTop = body.scrollHeight; }
+
+  function addMessage(text, sender){
+    var div = document.createElement('div');
+    div.className = 'msg ' + (sender === 'user' ? 'msg-user' : 'msg-bot');
+    div.textContent = text;
+    body.appendChild(div);
+    scrollToBottom();
+  }
+
+  function showTyping(){
+    var t = document.createElement('div');
+    t.className = 'typing-indicator';
+    t.id = 'typingIndicator';
+    t.innerHTML = '<span></span><span></span><span></span>';
+    body.appendChild(t);
+    scrollToBottom();
+  }
+  function hideTyping(){
+    var t = document.getElementById('typingIndicator');
+    if(t) t.remove();
+  }
+
+  function botReply(userText){
+    showTyping();
+    var delay = 550 + Math.random() * 500;
+    setTimeout(function(){
+      hideTyping();
+      addMessage(findAnswer(userText) || FALLBACK, 'bot');
+    }, delay);
+  }
+
+  function renderQuickReplies(){
+    quickWrap.innerHTML = '';
+    QUICK.forEach(function(q){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'quick-reply';
+      btn.textContent = q;
+      btn.addEventListener('click', function(){
+        addMessage(q, 'user');
+        botReply(q);
+      });
+      quickWrap.appendChild(btn);
+    });
+  }
+
+  function openChat(){
+    win.classList.add('open');
+    win.setAttribute('aria-hidden', 'false');
+    fab.setAttribute('aria-expanded', 'true');
+    if(!hasOpenedBefore){
+      hasOpenedBefore = true;
+      addMessage('أهلاً بك! أنا المساعد الهندسي الذكي في موقع المهندس مجاهد. كيف يمكنني مساعدتك اليوم في استشاراتك الهندسية؟', 'bot');
+      renderQuickReplies();
+    }
+    setTimeout(function(){ input.focus(); }, 300);
+  }
+
+  function closeChat(){
+    win.classList.remove('open');
+    win.classList.remove('minimized');
+    win.setAttribute('aria-hidden', 'true');
+    fab.setAttribute('aria-expanded', 'false');
+    isMinimized = false;
+  }
+
+  fab.addEventListener('click', function(){
+    if(win.classList.contains('open') && !isMinimized){
+      closeChat();
+    } else {
+      win.classList.remove('minimized');
+      isMinimized = false;
+      openChat();
+    }
+  });
+
+  closeBtn.addEventListener('click', closeChat);
+
+  minBtn.addEventListener('click', function(){
+    isMinimized = !isMinimized;
+    win.classList.toggle('minimized', isMinimized);
+    if(!isMinimized) setTimeout(function(){ input.focus(); }, 300);
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var text = input.value.trim();
+    if(!text) return;
+    addMessage(text, 'user');
+    input.value = '';
+    botReply(text);
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && win.classList.contains('open')) closeChat();
+  });
+
+})();
+</script>
+
 <script>
 (function(){
   "use strict";
