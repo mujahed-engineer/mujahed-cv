@@ -1357,17 +1357,7 @@
     }
 }
 
-      if(looksLikeHtml(text)){
-        addRichBotMessage(text);
-      } else {
-        addRichBotMessage(plainTextToParagraphs(text));
-      }
-    } catch(err){
-      hideTyping();
-      setBusy(false);
-      addTextMessage("تعذّر الوصول إلى خدمة المستشار الذكي حالياً (قد يكون بسبب الاتصال أو الخادم). أعد المحاولة خلال لحظات، أو تواصل مباشرة عبر قسم «تواصل معي» لاستشارة فورية من المهندس مجاهد.", 'error');
-    }
-  }
+    
 
   /* ---------- الردود السريعة ---------- */
   function renderQuickReplies(){
