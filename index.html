@@ -1326,7 +1326,7 @@
     }).join('');
   }
 
-  async function sendToAssistant(userText){
+ async function sendToAssistant(userText){
     if(isListening && recognition){ recognition.stop(); }
     var imagesForBubble = selectedFiles.map(function(f){ return { previewUrl: f.previewUrl }; });
     addUserMessage(userText, imagesForBubble);
@@ -1334,45 +1334,28 @@
     setBusy(true);
     showTyping();
 
-    try{
-      // ترميز الصور إلى Base64 قبل الإرسال
-      for(var i = 0; i < selectedFiles.length; i++){
-        if(!selectedFiles[i].base64){
-          selectedFiles[i].base64 = await fileToBase64(selectedFiles[i].file);
-        }
-      }
+    try {
+        var res = await fetch("https://green-glade-57c7.mjahdhashm068.workers.dev/", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: userText })
+        });
 
-      var requestBody = {
-        contents: [
-          { role: "user", parts: buildRequestParts(userText) }
-        ],
-        systemInstruction: {
-          parts: [ { text: SYSTEM_INSTRUCTION } ]
-        }
-      };
-
-      // تفريغ المرفقات بعد بنائها ضمن الطلب
-      selectedFiles.forEach(function(item){ URL.revokeObjectURL(item.previewUrl); });
-      selectedFiles = [];
-      renderAttachments();
-
-      var res = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
-
-      if(!res.ok){ throw new Error('HTTP ' + res.status); }
-    var data = await res.json();
-var text = data.reply || data.text || data.response || (data.candidates && data.candidates[0]?.content?.parts[0]?.text) || JSON.stringify(data);
-addTextMessage(text, 'bot');
-      hideTyping();
-      setBusy(false);
-
-      if(!text){
-        addTextMessage("لم يصل ردّ واضح من المستشار الذكي هذه المرة. أعد صياغة سؤالك أو حاول مجدداً خلال لحظات.", 'error');
-        return;
-      }
+        if(!res.ok){ throw new Error('HTTP ' + res.status); }
+        var data = await res.json();
+        var replyText = data.reply || "لم يتم استلام رد من النموذج.";
+        
+        addTextMessage(replyText, 'bot');
+    } catch(err) {
+        console.error("Assistant Fetch Error:", err);
+        addTextMessage("عذراً، تعذر الاتصال بالمستشار الذكي حالياً.", 'bot');
+    } finally {
+        hideTyping();
+        setBusy(false);
+        selectedFiles = [];
+        if(typeof renderAttachments === 'function') { renderAttachments(); }
+    }
+}
 
       if(looksLikeHtml(text)){
         addRichBotMessage(text);
