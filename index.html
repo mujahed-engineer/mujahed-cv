@@ -1326,7 +1326,7 @@
     }).join('');
   }
 
- async function sendToAssistant(userText){
+async function sendToAssistant(userText){
     if(isListening && recognition){ recognition.stop(); }
     var imagesForBubble = selectedFiles.map(function(f){ return { previewUrl: f.previewUrl }; });
     addUserMessage(userText, imagesForBubble);
@@ -1356,25 +1356,6 @@
         if(typeof renderAttachments === 'function') { renderAttachments(); }
     }
 }
-
-    
-
-  /* ---------- الردود السريعة ---------- */
-  function renderQuickReplies(){
-    quickWrap.innerHTML = '';
-    QUICK.forEach(function(q){
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'quick-reply';
-      btn.textContent = q;
-      btn.addEventListener('click', function(){
-        if(isBusy) return;
-        sendToAssistant(q);
-      });
-      quickWrap.appendChild(btn);
-    });
-  }
-
   /* ---------- فتح/إغلاق/تصغير النافذة ---------- */
   function openChat(){
     win.classList.add('open');
