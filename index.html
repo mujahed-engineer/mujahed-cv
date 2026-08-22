@@ -289,7 +289,7 @@
   }
   .hero .container{ position: relative; }
   .hero-grid{ display:grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px; align-items:center; }
-  @media (max-width: 900px){ .hero-grid{ grid-template-columns: 1fr; } .hero-visual{ order:-1; max-width: 220px; margin-inline:auto; } }
+  @media (max-width: 900px){ .hero-grid{ grid-template-columns: 1fr; } .hero-visual{ order:-1; margin-inline:auto; } }
 
   .corner{ position:absolute; width: 30px; height: 30px; border-color: var(--gold-deep); opacity: 0.7; }
   .corner-tl{ top: 78px; right: 8px; border-top:1px solid; border-right:1px solid; }
@@ -321,14 +321,22 @@
   .title-block .tb-row span:first-child{ color: var(--text-dim); }
   .title-block .tb-row span:last-child{ color: var(--gold-bright); }
 
-  .hero-visual{ position:relative; display:flex; align-items:center; justify-content:center; }
-  .hero-visual .seal{ position:relative; z-index:1; width: min(340px, 80%); height:auto; }
+  .hero-visual{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    width: 350px; height: 350px; margin-inline:auto; flex-shrink:0;
+  }
+  .hero-visual .seal{ position:relative; z-index:1; width: min(340px, 90%); height:auto; }
   #3d-truss-container{
     position:absolute; inset:0; z-index:0;
     display:flex; align-items:center; justify-content:center;
     pointer-events:none; overflow:hidden;
   }
   #3d-truss-container canvas{ width:100% !important; height:100% !important; display:block; }
+
+  /* استجابة المجسم الثلاثي الأبعاد وختمه: حاوية أصغر ومضبوطة على الجوال حتى لا تتداخل مع النص */
+  @media (max-width: 768px){
+    .hero-visual{ width:100%; max-width: 80vw; height: 250px; }
+  }
 
   .scroll-cue{
     position:absolute; bottom: 22px; right: 50%; transform: translateX(50%);
@@ -1735,7 +1743,7 @@
   function resize(){
     var w = container.clientWidth || 1;
     var h = container.clientHeight || 1;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
