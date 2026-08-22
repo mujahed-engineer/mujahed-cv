@@ -322,7 +322,13 @@
   .title-block .tb-row span:last-child{ color: var(--gold-bright); }
 
   .hero-visual{ position:relative; display:flex; align-items:center; justify-content:center; }
-  .hero-visual .seal{ width: min(340px, 80%); height:auto; }
+  .hero-visual .seal{ position:relative; z-index:1; width: min(340px, 80%); height:auto; }
+  #3d-truss-container{
+    position:absolute; inset:0; z-index:0;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none; overflow:hidden;
+  }
+  #3d-truss-container canvas{ width:100% !important; height:100% !important; display:block; }
 
   .scroll-cue{
     position:absolute; bottom: 22px; right: 50%; transform: translateX(50%);
@@ -731,6 +737,7 @@
       </div>
 
       <div class="hero-visual">
+        <div id="3d-truss-container" aria-hidden="true"></div>
         <svg class="seal" viewBox="0 0 220 220" aria-hidden="true">
           <circle class="seal-ring draw" cx="110" cy="110" r="98" stroke-width="1.5"/>
           <circle class="seal-ring draw" cx="110" cy="110" r="80" stroke-width="1"/>
@@ -871,7 +878,7 @@
           البريد الإلكتروني
         </a>
         <!-- عدّل رقم الواتساب بصيغة دولية بدون علامة + أو أصفار -->
-       <a href="https://api.whatsapp.com/send?phone=9647856113173" target="_blank" rel="noopener">
+        <a href="https://wa.me/9647000000000" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l1.4-4.2A8 8 0 1112 20a8 8 0 01-4.2-1.2L4 20z"/></svg>
           واتساب مباشر
         </a>
@@ -1307,10 +1314,39 @@
 
   function extractResponseText(data){
     try{
+      if(!data) return null;
+
+      // 1) أشكال شائعة لواجهات الـ Worker المخصصة
+      if(typeof data.reply === 'string' && data.reply.trim()) return data.reply;
+      if(typeof data.text === 'string' && data.text.trim()) return data.text;
+      if(typeof data.response === 'string' && data.response.trim()) return data.response;
+      if(typeof data.message === 'string' && data.message.trim()) return data.message;
+      if(typeof data.output === 'string' && data.output.trim()) return data.output;
+      if(typeof data.content === 'string' && data.content.trim()) return data.content;
+
+      // 2) شكل استجابة Gemini الرسمي candidates[0].content.parts[].text
       var candidate = data.candidates && data.candidates[0];
       var parts = candidate && candidate.content && candidate.content.parts;
-      if(!parts || !parts.length) return null;
-      return parts.map(function(p){ return p.text || ''; }).join('');
+      if(parts && parts.length){
+        var joined = parts.map(function(p){ return (p && p.text) || ''; }).join('');
+        if(joined.trim()) return joined;
+      }
+
+      // 3) بعض الوسطاء يعيدون النتيجة داخل data.data أو data.result كأي من الأشكال أعلاه
+      if(data.data && typeof data.data === 'object'){
+        var nested = extractResponseText(data.data);
+        if(nested) return nested;
+      }
+      if(data.result){
+        var nestedResult = (typeof data.result === 'string') ? data.result : extractResponseText(data.result);
+        if(nestedResult) return nestedResult;
+      }
+
+      // 4) لم نتعرف على الشكل — نعرض الرد الخام كما هو حتى لا يظهر وكأنه رد فارغ
+      var raw = JSON.stringify(data);
+      if(raw && raw !== '{}' && raw !== 'null') return "تعذّر التعرف تلقائياً على شكل الرد، وهذا محتواه كما وصل من الخادم:\n" + raw;
+
+      return null;
     }catch(e){ return null; }
   }
 
@@ -1320,13 +1356,14 @@
 
   function plainTextToParagraphs(text){
     return text.split(/\n{2,}/).map(function(block){
-      return '<p>' + block.replace(/\n/g, '<br>').replace(/[&<>]/g, function(c){
+      var escaped = block.replace(/[&<>]/g, function(c){
         return c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;';
-      }) + '</p>';
+      });
+      return '<p>' + escaped.replace(/\n/g, '<br>') + '</p>';
     }).join('');
   }
 
-async function sendToAssistant(userText){
+  async function sendToAssistant(userText){
     if(isListening && recognition){ recognition.stop(); }
     var imagesForBubble = selectedFiles.map(function(f){ return { previewUrl: f.previewUrl }; });
     addUserMessage(userText, imagesForBubble);
@@ -1334,28 +1371,74 @@ async function sendToAssistant(userText){
     setBusy(true);
     showTyping();
 
-    try {
-        var res = await fetch("https://green-glade-57c7.mjahdhashm068.workers.dev/", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: userText })
-        });
+    try{
+      // ترميز الصور إلى Base64 قبل الإرسال
+      for(var i = 0; i < selectedFiles.length; i++){
+        if(!selectedFiles[i].base64){
+          selectedFiles[i].base64 = await fileToBase64(selectedFiles[i].file);
+        }
+      }
 
-        if(!res.ok){ throw new Error('HTTP ' + res.status); }
-        var data = await res.json();
-        var replyText = data.reply || "لم يتم استلام رد من النموذج.";
-        
-        addTextMessage(replyText, 'bot');
-    } catch(err) {
-        console.error("Assistant Fetch Error:", err);
-        addTextMessage("عذراً، تعذر الاتصال بالمستشار الذكي حالياً.", 'bot');
-    } finally {
-        hideTyping();
-        setBusy(false);
-        selectedFiles = [];
-        if(typeof renderAttachments === 'function') { renderAttachments(); }
+      var requestBody = {
+        contents: [
+          { role: "user", parts: buildRequestParts(userText) }
+        ],
+        systemInstruction: {
+          parts: [ { text: SYSTEM_INSTRUCTION } ]
+        }
+      };
+
+      // تفريغ المرفقات بعد بنائها ضمن الطلب
+      selectedFiles.forEach(function(item){ URL.revokeObjectURL(item.previewUrl); });
+      selectedFiles = [];
+      renderAttachments();
+
+      var res = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if(!res.ok){ throw new Error('HTTP ' + res.status); }
+      var data = await res.json();
+      var text = extractResponseText(data);
+
+      hideTyping();
+      setBusy(false);
+
+      if(!text){
+        addTextMessage("لم يصل ردّ واضح من المستشار الذكي هذه المرة. أعد صياغة سؤالك أو حاول مجدداً خلال لحظات.", 'error');
+        return;
+      }
+
+      if(looksLikeHtml(text)){
+        addRichBotMessage(text);
+      } else {
+        addRichBotMessage(plainTextToParagraphs(text));
+      }
+    } catch(err){
+      hideTyping();
+      setBusy(false);
+      addTextMessage("تعذّر الوصول إلى خدمة المستشار الذكي حالياً (قد يكون بسبب الاتصال أو الخادم). أعد المحاولة خلال لحظات، أو تواصل مباشرة عبر قسم «تواصل معي» لاستشارة فورية من المهندس مجاهد.", 'error');
     }
-}
+  }
+
+  /* ---------- الردود السريعة ---------- */
+  function renderQuickReplies(){
+    quickWrap.innerHTML = '';
+    QUICK.forEach(function(q){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'quick-reply';
+      btn.textContent = q;
+      btn.addEventListener('click', function(){
+        if(isBusy) return;
+        sendToAssistant(q);
+      });
+      quickWrap.appendChild(btn);
+    });
+  }
+
   /* ---------- فتح/إغلاق/تصغير النافذة ---------- */
   function openChat(){
     win.classList.add('open');
@@ -1576,6 +1659,111 @@ async function sendToAssistant(userText){
     }).catch(function(){
       window.print();
     });
+  });
+
+})();
+</script>
+
+<!-- ============ مجسم هندسي ثلاثي الأبعاد (Structural Wireframe Cube) ============ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var container = document.getElementById('3d-truss-container');
+  if(!container || typeof THREE === 'undefined') return;
+
+  var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GOLD = 0xc9a15a;
+  var GOLD_DIM = 0x8a6a34;
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 0, 6.2);
+
+  var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setClearColor(0x000000, 0); // خلفية شفافة بالكامل
+  container.appendChild(renderer.domElement);
+
+  /* بناء مجسم شبيه بالإطار الإنشائي (Space Frame): حواف المكعب + دعامات قطرية على كل وجه */
+  var truss = new THREE.Group();
+
+  var edgesGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(2.6, 2.6, 2.6));
+  var edgesMat = new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.9 });
+  truss.add(new THREE.LineSegments(edgesGeo, edgesMat));
+
+  // دعامات قطرية (تكسية X) على كل وجه من وجوه المكعب لإعطاء طابع الجملون الإنشائي
+  var s = 1.3; // نصف طول ضلع المكعب
+  var faceDiagonals = [
+    // الوجه الأمامي والخلفي (z = ±s)
+    [[-s,-s, s],[s, s, s]], [[-s, s, s],[s,-s, s]],
+    [[-s,-s,-s],[s, s,-s]], [[-s, s,-s],[s,-s,-s]],
+    // الوجه العلوي والسفلي (y = ±s)
+    [[-s, s,-s],[s, s, s]], [[-s, s, s],[s, s,-s]],
+    [[-s,-s,-s],[s,-s, s]], [[-s,-s, s],[s,-s,-s]],
+    // الوجه الجانبي (x = ±s)
+    [[-s,-s,-s],[-s, s, s]], [[-s, s,-s],[-s,-s, s]],
+    [[ s,-s,-s],[ s, s, s]], [[ s, s,-s],[ s,-s, s]]
+  ];
+  var diagPositions = [];
+  faceDiagonals.forEach(function(pair){
+    diagPositions.push(pair[0][0], pair[0][1], pair[0][2]);
+    diagPositions.push(pair[1][0], pair[1][1], pair[1][2]);
+  });
+  var diagGeo = new THREE.BufferGeometry();
+  diagGeo.setAttribute('position', new THREE.Float32BufferAttribute(diagPositions, 3));
+  var diagMat = new THREE.LineBasicMaterial({ color: GOLD_DIM, transparent: true, opacity: 0.45 });
+  truss.add(new THREE.LineSegments(diagGeo, diagMat));
+
+  // نقاط عقد صغيرة عند زوايا المكعب (تعزيز شكل "العقدة الإنشائية")
+  var nodeGeo = new THREE.SphereGeometry(0.045, 8, 8);
+  var nodeMat = new THREE.MeshBasicMaterial({ color: GOLD });
+  [-s, s].forEach(function(x){
+    [-s, s].forEach(function(y){
+      [-s, s].forEach(function(z){
+        var node = new THREE.Mesh(nodeGeo, nodeMat);
+        node.position.set(x, y, z);
+        truss.add(node);
+      });
+    });
+  });
+
+  truss.rotation.set(0.5, 0.7, 0);
+  scene.add(truss);
+
+  /* تحجيم المُصيّر بحسب أبعاد الحاوية الفعلية، متجاوب مع الجوال واللابتوب */
+  function resize(){
+    var w = container.clientWidth || 1;
+    var h = container.clientHeight || 1;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  /* دوران هادئ ومستمر؛ يتوقف عند تفضيل المستخدم لتقليل الحركة */
+  function renderStatic(){
+    renderer.render(scene, camera);
+  }
+
+  if(prefersReducedMotion){
+    renderStatic();
+  } else {
+    var clock = new THREE.Clock();
+    (function animate(){
+      requestAnimationFrame(animate);
+      var delta = clock.getDelta();
+      truss.rotation.y += delta * 0.18; // دوران بطيء وهادئ
+      truss.rotation.x += delta * 0.07;
+      renderer.render(scene, camera);
+    })();
+  }
+
+  /* إيقاف الحلقة عند تصغير علامة التبويب لتوفير الأداء (مراعاة اختيارية بسيطة) */
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) return; // requestAnimationFrame يتوقف تلقائياً في التبويبات غير الظاهرة في معظم المتصفحات
   });
 
 })();
