@@ -326,16 +326,18 @@
     width: 350px; height: 350px; margin-inline:auto; flex-shrink:0;
   }
   .hero-visual .seal{ position:relative; z-index:1; width: min(340px, 90%); height:auto; }
-  #3d-truss-container{
-    position:absolute; inset:0; z-index:0;
+  #truss-3d-container{
+    position:absolute; inset:0; z-index:0; margin:0; padding:0;
     display:flex; align-items:center; justify-content:center;
     pointer-events:none; overflow:hidden;
   }
-  #3d-truss-container canvas{ width:100% !important; height:100% !important; display:block; }
+  #truss-3d-container canvas{ width:100% !important; height:100% !important; display:block; margin:0; padding:0; }
 
-  /* استجابة المجسم الثلاثي الأبعاد وختمه: حاوية أصغر ومضبوطة على الجوال حتى لا تتداخل مع النص */
+  /* استجابة المجسم الثلاثي الأبعاد وختمه: حاوية مدمجة ومضبوطة على الجوال حتى لا تترك فراغاً حول النص */
   @media (max-width: 768px){
-    .hero-visual{ width:100%; max-width: 80vw; height: 250px; }
+    .hero-grid{ gap: 20px; }
+    .hero-visual{ width:100%; max-width: 80vw; height: 190px; margin-block: 0; }
+    .hero-visual .seal{ width:auto; height: min(85%, 160px); }
   }
 
   .scroll-cue{
@@ -745,7 +747,7 @@
       </div>
 
       <div class="hero-visual">
-        <div id="3d-truss-container" aria-hidden="true"></div>
+        <div id="truss-3d-container" aria-hidden="true"></div>
         <svg class="seal" viewBox="0 0 220 220" aria-hidden="true">
           <circle class="seal-ring draw" cx="110" cy="110" r="98" stroke-width="1.5"/>
           <circle class="seal-ring draw" cx="110" cy="110" r="80" stroke-width="1"/>
@@ -1678,7 +1680,7 @@
 (function(){
   "use strict";
 
-  var container = document.getElementById('3d-truss-container');
+  var container = document.getElementById('truss-3d-container');
   if(!container || typeof THREE === 'undefined') return;
 
   var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
