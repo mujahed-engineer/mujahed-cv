@@ -1411,7 +1411,7 @@
       var res = await fetch(WORKER_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+     body: JSON.stringify({ ...requestBody, prompt: document.getElementById('chatInput').value || requestBody.message, message: document.getElementById('chatInput').value || requestBody.message })
       });
 
       if(!res.ok){ throw new Error('HTTP ' + res.status); }
