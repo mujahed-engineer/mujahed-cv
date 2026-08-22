@@ -1013,6 +1013,11 @@
      لا يوضع أي مفتاح API داخل هذا الملف إطلاقاً — الـ Worker وحده يحتفظ بالمفتاح.
      ================================================================== */
   var WORKER_URL = "https://green-glade-57c7.mjahdhashm068.workers.dev";
+  // اسم الموديل يُرسل كحقل اختياري ضمن الطلب؛ الـ Worker وحده يقرر فعلياً أي موديل يستدعي من Google.
+  // إن كان كود الـ Worker مبنياً على قراءة هذا الحقل، سيتغيّر الموديل تلقائياً من هنا.
+  // إن كان الـ Worker يستخدم موديلاً ثابتاً مكتوباً داخل كوده، فتغيير هذا السطر وحده لن يكفي —
+  // يجب تعديل استدعاء generateContent داخل سكربت الـ Worker نفسه على Cloudflare.
+  var MODEL_NAME = "gemini-3.5-flash";
   var MAX_IMAGES = 10;
   var MAX_TOTAL_MB = 20; // حد أقصى تقريبي لحجم الصور مجتمعة قبل الترميز
 
@@ -1394,14 +1399,16 @@
         }
       }
 
-      var requestBody = {
-        contents: [
-          { role: "user", parts: buildRequestParts(userText) }
-        ],
-        systemInstruction: {
-          parts: [ { text: SYSTEM_INSTRUCTION } ]
-        }
-      };
+      // جسم الطلب: النص المكتوب في مربع الإدخال يُرسل مباشرة عبر حقل prompt.
+      // ملاحظة: أي صور مرفقة تُرسل ضمن حقل images منفصل (وليس ضائعة)، لأن حذفها بصمت
+      // كان سيُسقط ميزة تحليل المخططات بالكامل دون تنبيه — الـ Worker يحتاج قراءة
+      // هذا الحقل الإضافي إن أراد تمرير الصور إلى Gemini.
+      var requestBody = { prompt: userText };
+      if(selectedFiles.length){
+        requestBody.images = selectedFiles.map(function(f){
+          return { mimeType: f.mimeType, data: f.base64 };
+        });
+      }
 
       // تفريغ المرفقات بعد بنائها ضمن الطلب
       selectedFiles.forEach(function(item){ URL.revokeObjectURL(item.previewUrl); });
@@ -1411,7 +1418,15 @@
       var res = await fetch(WORKER_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify({ ...requestBody, prompt: document.getElementById('chatInput').value || requestBody.message, message: document.getElementById('chatInput').value || requestBody.message })
+        // ملاحظة: استخدمت userText بدل input.value هنا لأن حقل الإدخال يُفرَّغ
+        // (input.value = '') قبل استدعاء هذه الدالة مباشرة — فلو قرأنا input.value
+        // في هذه اللحظة لوصل نص فارغ فعلياً. userText يحمل نفس القيمة التي كانت
+        // في المربع لحظة الإرسال، وهذا ما يضمن عدم إرسال طلب فارغ للـ Worker.
+        body: JSON.stringify(Object.assign({}, requestBody, {
+          prompt: userText,
+          message: userText,
+          text: userText
+        }))
       });
 
       if(!res.ok){ throw new Error('HTTP ' + res.status); }
